@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: dac-example-app
+  profiles:
+    active: local
