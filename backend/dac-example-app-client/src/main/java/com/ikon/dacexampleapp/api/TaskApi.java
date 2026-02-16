@@ -20,71 +20,74 @@ import java.util.List;
 @Tag(name = "Task Management", description = "APIs for managing tasks with CRUD operations")
 @RequestMapping("/tasks")
 public interface TaskApi {
+        @Operation(summary = "Create a new task")
+        @ApiResponses({
+                @ApiResponse(responseCode = "201", description = "Task created successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid input data"),
+                @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        @PostMapping
+        ResponseEntity<TaskResponse> createTask(
+                @Parameter(description = "Access token for authentication", required = true) @RequestHeader("Authorization") String accessToken,
+                @Valid @RequestBody TaskRequest request);
+        
+        @Operation(summary = "Get a task by ID")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Task retrieved successfully"),
+                @ApiResponse(responseCode = "404", description = "Task not found"),
+                @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        @GetMapping("/{id}")
+        ResponseEntity<TaskResponse> getTaskById(
+                @Parameter(description = "Access token for authentication", required = true) @RequestHeader("Authorization") String accessToken,
+                @Parameter(description = "ID of the task to retrieve", required = true) @PathVariable String id);
+        
+        @Operation(summary = "Get all tasks with optional filters")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully"),
+                @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        @GetMapping
+        ResponseEntity<List<TaskResponse>> getAllTasks(
+                @Parameter(description = "Access token for authentication", required = true) @RequestHeader("Authorization") String accessToken,
+                @Parameter(description = "Filter by task status") @RequestParam(required = false) TaskStatus status,
+                @Parameter(description = "Filter by task priority") @RequestParam(required = false) TaskPriority priority,
+                @Parameter(description = "Search term for title or description") @RequestParam(required = false) String search);
 
-    @Operation(summary = "Create a new task", description = "Creates a new task with the provided details")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Task created successfully"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
-    })
-    @PostMapping
-    ResponseEntity<TaskResponse> createTask(
-            @RequestHeader("Authorization") String accessToken,
-            @Valid @RequestBody TaskRequest request);
+        @Operation(summary = "Get paginated list of tasks with optional filters")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully"),
+                @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        @GetMapping("/paginated")
+        ResponseEntity<Page<TaskResponse>> getTasksPaginated(
+                @Parameter(description = "Access token for authentication", required = true) @RequestHeader("Authorization") String accessToken,
+                @Parameter(description = "Pagination information") Pageable pageable,
+                @Parameter(description = "Filter by task status") @RequestParam(required = false) TaskStatus status,
+                @Parameter(description = "Filter by task priority") @RequestParam(required = false) TaskPriority priority,
+                @Parameter(description = "Search term for title or description") @RequestParam(required = false) String search);
 
-    @Operation(summary = "Get task by ID", description = "Retrieves a specific task by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Task found"),
-            @ApiResponse(responseCode = "404", description = "Task not found")
-    })
-    @GetMapping("/{id}")
-    ResponseEntity<TaskResponse> getTaskById(
-            @RequestHeader("Authorization") String accessToken,
-            @Parameter(description = "Task ID", required = true) @PathVariable Long id);
+        @Operation(summary = "Update an existing task")
+        @ApiResponses({
+                @ApiResponse(responseCode = "200", description = "Task updated successfully"),
+                @ApiResponse(responseCode = "400", description = "Invalid input data"),
+                @ApiResponse(responseCode = "404", description = "Task not found"),
+                @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        @PutMapping("/{id}")
+        ResponseEntity<TaskResponse> updateTask(
+                @Parameter(description = "Access token for authentication", required = true) @RequestHeader("Authorization") String accessToken,
+                @Parameter(description = "ID of the task to update", required = true) @PathVariable String id,
+                @Valid @RequestBody TaskRequest request);
 
-    @Operation(summary = "Get all tasks", description = "Retrieves all tasks with optional filtering by status, priority, or search term")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully")
-    })
-    @GetMapping
-    ResponseEntity<List<TaskResponse>> getAllTasks(@RequestHeader("Authorization") String accessToken,
-            @Parameter(description = "Filter by status") @RequestParam(required = false) TaskStatus status,
-            @Parameter(description = "Filter by priority") @RequestParam(required = false) TaskPriority priority,
-            @Parameter(description = "Search by title") @RequestParam(required = false) String search);
-
-    @Operation(summary = "Get paginated tasks", description = "Retrieves tasks with pagination and optional filtering")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tasks retrieved successfully with pagination")
-    })
-    @GetMapping("/paginated")
-    ResponseEntity<Page<TaskResponse>> getTasksPaginated(
-            @RequestHeader("Authorization") String accessToken,
-            Pageable pageable,
-
-            @Parameter(description = "Filter by status") @RequestParam(required = false) TaskStatus status,
-
-            @Parameter(description = "Filter by priority") @RequestParam(required = false) TaskPriority priority,
-
-            @Parameter(description = "Search by title") @RequestParam(required = false) String search);
-
-    @Operation(summary = "Update a task", description = "Updates an existing task with new details")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Task updated successfully"),
-            @ApiResponse(responseCode = "404", description = "Task not found"),
-            @ApiResponse(responseCode = "400", description = "Invalid input data")
-    })
-    @PutMapping("/{id}")
-    ResponseEntity<TaskResponse> updateTask(
-            @RequestHeader("Authorization") String accessToken,
-            @Parameter(description = "Task ID", required = true) @PathVariable Long id,
-            @Valid @RequestBody TaskRequest request);
-
-    @Operation(summary = "Delete a task", description = "Deletes a task by its ID")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
-            @ApiResponse(responseCode = "404", description = "Task not found")
-    })
-    @DeleteMapping("/{id}")
-    ResponseEntity<Void> deleteTask(
-            @RequestHeader("Authorization") String accessToken,
-            @Parameter(description = "Task ID", required = true) @PathVariable Long id);
+        @Operation(summary = "Delete a task by ID")
+        @ApiResponses({
+                @ApiResponse(responseCode = "204", description = "Task deleted successfully"),
+                @ApiResponse(responseCode = "404", description = "Task not found"),
+                @ApiResponse(responseCode = "401", description = "Unauthorized")
+        })
+        @DeleteMapping("/{id}")
+        ResponseEntity<Void> deleteTask(
+                @Parameter(description = "Access token for authentication", required = true) @RequestHeader("Authorization") String accessToken,
+                @Parameter(description = "ID of the task to delete", required = true) @PathVariable String id);
 }

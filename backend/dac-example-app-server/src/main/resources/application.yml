@@ -34,37 +34,21 @@ spring:
           issuer-uri: https://ikoncloud-dev.keross.com/ikon-api/platform
 
   # If you use any one of the below data sources, uncomment data and the respective section.
-  # data:
-
-  # If you are using redis, uncomment below
-  # redis:
-  #   host: localhost
-  #   port: 6379
-  #   password: 7410
-  #   database: 0
-  #   lettuce:
-  #     pool:
-  #       max-active: 10       # Maximum number of connections
-  #       max-idle: 8          # Maximum idle connections
-  #       min-idle: 2          # Minimum idle connections
-  #       max-wait: 5s         # Max wait time for a connection
-
-  # If you are using mongodb, uncomment below
-  # mongodb:
-  #   host: localhost
-  #   port: 27017
-  #   username: system
-  #   password: admin
-  #   authentication-database: admin
-  # mongodb:
-  #   client:
-  #     settings:
-  #       connection-pool:
-  #         max-size: 500           # Maximum connections in the pool
-  #         min-size: 10           # Minimum idle connections
-  #         max-connection-idle-time: 10s     # Time a connection can be idle before being closed
-  #         max-wait-time: 5s
-
+  data:
+    mongodb:
+      host: localhost
+      port: 27017
+      username: root
+      password: mongopassword123
+      authentication-database: admin
+mongodb:
+  client:
+    settings:
+      connection-pool:
+        max-size: 500
+        min-size: 10
+        max-connection-idle-time: 10s
+        max-wait-time: 5s
 
 ikon:
   user:
@@ -87,7 +71,7 @@ ikon:
   dac:
     # Enable/disable DAC (default: true)
     enabled: true
-    
+
     # Default batch size for IN clause operations (default: 500)
     default-batch-size: 500
 
