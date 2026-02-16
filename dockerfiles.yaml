@@ -1,9 +1,0 @@
-images:
-  - name: dac-example-app-frontend
-    path: ./frontend/Dockerfile
-    chart: frontend
-
-  - name: dac-example-app-backend
-    path: ./backend/Dockerfile
-    chart: backend
-    context: .

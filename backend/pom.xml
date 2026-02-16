@@ -49,18 +49,6 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>
-        <!-- When required other apps package -->
-        <!-- <repository>
-            <id>ikon-apps-lib-dist</id>
-            <name>Ikon Application Library Distribution</name>
-            <url>https://ikon-vpm.keross.com/nexus/repository/ikon-apps-lib-dist</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository> -->
     </repositories>
 
     <distributionManagement>

@@ -1,5 +1,0 @@
-import { NextResponse } from "next/server";
-
-export async function GET() {
-    return NextResponse.json({ ready: "ok" }, { status: 200 });
-}

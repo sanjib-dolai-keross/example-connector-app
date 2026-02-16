@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.ikon</groupId>
-        <artifactId>{{repo_name}}</artifactId>
+        <artifactId>dac-example-app</artifactId>
         <version>1.0.0</version>
     </parent>
 
     <groupId>com.ikon</groupId>
-    <artifactId>{{repo_name}}-server</artifactId>
+    <artifactId>dac-example-app-server</artifactId>
 
     <dependencies>
         <dependency>
@@ -20,22 +20,14 @@
         </dependency>
         <dependency>
             <groupId>com.ikon</groupId>
-            <artifactId>{{repo_name}}-client</artifactId>
-            <version>${{{repo_name}}.version}</version>
+            <artifactId>ikon-dac</artifactId>
+            <version>${ikon.sdk.version}</version>
         </dependency>
-        <!-- Comment out if using process management -->
-        <!-- <dependency>
+        <dependency>
             <groupId>com.ikon</groupId>
-            <artifactId>ikon-processmanagement</artifactId>
-            <version>${ikon.sdk.version}</version>
-        </dependency> -->
-
-        <!-- Comment out if using job script -->
-        <!-- <dependency>
-            <groupId>com.ikon</groupId>
-            <artifactId>ikon-job-executor</artifactId>
-            <version>${ikon.sdk.version}</version>
-        </dependency> -->
+            <artifactId>dac-example-app-client</artifactId>
+            <version>${dac-example-app.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
@@ -53,22 +45,9 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
     </dependencies>
 

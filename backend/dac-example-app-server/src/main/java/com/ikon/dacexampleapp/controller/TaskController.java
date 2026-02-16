@@ -1,5 +1,6 @@
 package com.ikon.dacexampleapp.controller;
 
+import com.ikon.dac.annotation.RequireRole;
 import com.ikon.dacexampleapp.api.TaskApi;
 import com.ikon.dacexampleapp.dto.request.TaskRequest;
 import com.ikon.dacexampleapp.dto.response.TaskResponse;

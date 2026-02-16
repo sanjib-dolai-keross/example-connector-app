@@ -1,11 +1,21 @@
 package com.ikon.dacexampleapp.service;
 
+import com.ikon.appaccessmanagement.entity.group.IkonGroup;
+import com.ikon.appaccessmanagement.enums.GroupType;
+import com.ikon.appaccessmanagement.service.IkonGroupService;
+import com.ikon.dac.annotation.RequireRole;
+import com.ikon.dac.core.AccessChecker;
+import com.ikon.dac.core.AccessCriteria;
+import com.ikon.dac.core.DataAccessFilter;
+import com.ikon.dac.filter.jpa.JpaAccessFilter;
 import com.ikon.dacexampleapp.dto.request.TaskRequest;
 import com.ikon.dacexampleapp.dto.response.TaskResponse;
 import com.ikon.dacexampleapp.entity.Task;
 import com.ikon.dacexampleapp.enums.TaskPriority;
 import com.ikon.dacexampleapp.enums.TaskStatus;
 import com.ikon.dacexampleapp.repository.TaskRepository;
+import com.ikon.webservice.WebService;
+
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -13,15 +23,21 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class TaskService {
+public class TaskService extends WebService {
 
     private final TaskRepository taskRepository;
     private final ModelMapper modelMapper;
+    private final JpaAccessFilter dataAccessFilter;
+    private final IkonGroupService ikonGroupService;
 
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
@@ -34,8 +50,27 @@ public class TaskService {
         if (task.getPriority() == null) {
             task.setPriority(TaskPriority.MEDIUM);
         }
+        task.setAccountId(getActiveAccountId());
 
         Task savedTask = taskRepository.save(task);
+
+        String dynamicGroupName = "Task-" + savedTask.getId() + "-Group";
+
+        savedTask.setDynamicGroups(new HashSet<>(Set.of(dynamicGroupName)));
+        taskRepository.save(savedTask);
+
+        IkonGroup group = IkonGroup.builder()
+                .groupName(dynamicGroupName)
+                .groupType(GroupType.DYNAMIC)
+                .groupDescription("Test")
+                .accountId(getActiveAccountId())
+                .softwareId(UUID.fromString("865798ff-47a9-4911-b82e-d50d6fd7ff87"))
+                .build();
+        IkonGroup createdGroup = ikonGroupService.createGroup(group);
+
+        ikonGroupService.saveMembershipToGroup(createdGroup.getGroupId(), List.of(getCurrentUserId()),
+                getActiveAccountId());
+
         return modelMapper.map(savedTask, TaskResponse.class);
     }
 
@@ -46,18 +81,45 @@ public class TaskService {
         return modelMapper.map(task, TaskResponse.class);
     }
 
+    
     @Transactional(readOnly = true)
     public List<TaskResponse> getAllTasksWithFilters(TaskStatus status, TaskPriority priority, String search) {
-        return taskRepository.findAllWithFilters(status, priority, search).stream()
+        Map<String, Object> filters = new HashMap<>();
+        if (status != null) {
+            filters.put("status", status);
+        }
+        if (priority != null) {
+            filters.put("priority", priority);
+        }
+        // if (search != null && !search.trim().isEmpty()) {
+        // filters.put("search", search);
+        // }
+        return dataAccessFilter
+                .findAll(Task.class, filters,
+                        AccessCriteria.builder().skipDynamicGroupCheck(false).allowedRoles(Set.of("Basic Access"))
+                                .build())
+                .stream()
                 .map(task -> modelMapper.map(task, TaskResponse.class))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public Page<TaskResponse> getTasksPaginated(Pageable pageable, TaskStatus status,
             TaskPriority priority, String search) {
-        Page<Task> taskPage = taskRepository.findAllWithFiltersPaginated(status, priority, search, pageable);
-        return taskPage.map(task -> modelMapper.map(task, TaskResponse.class));
+        Map<String, Object> filters = new HashMap<>();
+        if (status != null) {
+            filters.put("status", status);
+        }
+        if (priority != null) {
+            filters.put("priority", priority);
+        }
+        // if (search != null && !search.trim().isEmpty()) {
+        // filters.put("search", search);
+        // }
+        return dataAccessFilter
+                .findAll(Task.class, filters, AccessCriteria.builder().skipDynamicGroupCheck(false).allowedRoles(Set.of("Basic Access")).build(),
+                        pageable)
+                .map(task -> modelMapper.map(task, TaskResponse.class));
     }
 
     @Transactional
