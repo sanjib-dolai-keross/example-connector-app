@@ -50,6 +50,20 @@ mongodb:
         max-connection-idle-time: 10s
         max-wait-time: 5s
 
+  cassandra:
+    keyspace-name: my_keyspace
+    contact-points: localhost
+    port: 9042
+    local-datacenter: datacenter1
+    schema-action: CREATE_IF_NOT_EXISTS
+    
+    # Driver level timeouts (often needed to avoid "DriverTimeoutException")
+    request:
+      timeout: 10s
+    connection:
+      connect-timeout: 10s
+      init-query-timeout: 10s
+
 ikon:
   user:
     agent: "IKON App Server"

@@ -5,11 +5,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import org.bson.types.ObjectId;
 import org.modelmapper.ModelMapper;
-import org.springframework.context.annotation.Primary;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ import com.ikon.appaccessmanagement.entity.group.IkonGroup;
 import com.ikon.appaccessmanagement.enums.GroupType;
 import com.ikon.appaccessmanagement.service.IkonGroupService;
 import com.ikon.dac.core.AccessCriteria;
-import com.ikon.dac.filter.mongo.MongoAccessFilter;
+import com.ikon.dac.core.DataAccessFilter;
 import com.ikon.dacexampleapp.dto.request.TaskRequest;
 import com.ikon.dacexampleapp.dto.response.TaskResponse;
 import com.ikon.dacexampleapp.entity.TaskDocument;
@@ -29,18 +28,25 @@ import com.ikon.dacexampleapp.enums.TaskStatus;
 import com.ikon.dacexampleapp.repository.TaskMongoRepository;
 import com.ikon.webservice.WebService;
 
-import lombok.RequiredArgsConstructor;
 
 @Service("mongoService")
-@Primary
-@RequiredArgsConstructor
 public class MongoService extends WebService implements TaskService {
 
     private final TaskMongoRepository taskMongoRepository;
     private final ModelMapper modelMapper;
-    private final MongoAccessFilter dataAccessFilter;
+    private final DataAccessFilter dataAccessFilter;
     private final IkonGroupService ikonGroupService;
     private final IkonApplicationProperties applicationProperties;
+
+    public MongoService(TaskMongoRepository taskMongoRepository, ModelMapper modelMapper,
+             @Qualifier("mongoAccessFilter") DataAccessFilter dataAccessFilter,
+            IkonGroupService ikonGroupService, IkonApplicationProperties applicationProperties) {
+        this.taskMongoRepository = taskMongoRepository;
+        this.modelMapper = modelMapper;
+        this.dataAccessFilter = dataAccessFilter;
+        this.ikonGroupService = ikonGroupService;
+        this.applicationProperties = applicationProperties;
+    }
 
     @Override
     @Transactional
@@ -81,8 +87,7 @@ public class MongoService extends WebService implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public TaskResponse getTaskById(String id) {
-        TaskDocument task = taskMongoRepository.findById(new ObjectId(id))
-                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+        TaskDocument task = dataAccessFilter.findByIdOrThrow(TaskDocument.class, new ObjectId(id));
         return modelMapper.map(task, TaskResponse.class);
     }
 
@@ -98,9 +103,7 @@ public class MongoService extends WebService implements TaskService {
         }
 
         return dataAccessFilter
-                .findAll(TaskDocument.class, filters,
-                        AccessCriteria.builder().allowedRoles(Set.of("Basic Access"))
-                                .build())
+                .findAll(TaskDocument.class, filters,AccessCriteria.builder().skipDynamicGroupCheck(true).build())
                 .stream()
                 .map(task -> modelMapper.map(task, TaskResponse.class))
                 .toList();
@@ -120,8 +123,7 @@ public class MongoService extends WebService implements TaskService {
 
         return dataAccessFilter
                 .findAll(TaskDocument.class, filters,
-                        AccessCriteria.builder()
-                                .build(),
+                        AccessCriteria.defaults(),
                         pageable)
                 .map(task -> modelMapper.map(task, TaskResponse.class));
     }

@@ -8,9 +8,11 @@ import com.ikon.dac.core.AccessCriteria;
 import com.ikon.dac.core.DataAccessFilter;
 import com.ikon.dacexampleapp.dto.request.TaskRequest;
 import com.ikon.dacexampleapp.dto.response.TaskResponse;
+import com.ikon.dacexampleapp.entity.TaskCassandra;
 import com.ikon.dacexampleapp.entity.TaskEntity;
 import com.ikon.dacexampleapp.enums.TaskPriority;
 import com.ikon.dacexampleapp.enums.TaskStatus;
+import com.ikon.dacexampleapp.repository.TaskCassandraRepository;
 import com.ikon.dacexampleapp.repository.TaskRepository;
 import com.ikon.webservice.WebService;
 
@@ -28,17 +30,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Service("jpaService")
-public class JPAService extends WebService implements TaskService {
+@Service("cassandraService")
+public class CassandraService extends WebService implements TaskService {
 
-    private final TaskRepository taskRepository;
+    private final TaskCassandraRepository taskRepository;
     private final ModelMapper modelMapper;
     private final DataAccessFilter dataAccessFilter;
     private final IkonGroupService ikonGroupService;
     private final IkonApplicationProperties applicationProperties;
 
-    public JPAService(TaskRepository taskRepository, ModelMapper modelMapper,
-            @Qualifier("jpaAccessFilter") DataAccessFilter dataAccessFilter,
+    public CassandraService(TaskCassandraRepository taskRepository, ModelMapper modelMapper,
+            @Qualifier("cassandraAccessFilter") DataAccessFilter dataAccessFilter,
             IkonGroupService ikonGroupService, IkonApplicationProperties applicationProperties) {
         this.taskRepository = taskRepository;
         this.modelMapper = modelMapper;
@@ -50,7 +52,7 @@ public class JPAService extends WebService implements TaskService {
     @Override
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
-        TaskEntity task = modelMapper.map(request, TaskEntity.class);
+        TaskCassandra task = modelMapper.map(request, TaskCassandra.class);
 
         // Set default values if not provided
         if (task.getStatus() == null) {
@@ -61,7 +63,7 @@ public class JPAService extends WebService implements TaskService {
         }
         task.setAccountId(getActiveAccountId());
 
-        TaskEntity savedTask = taskRepository.save(task);
+        TaskCassandra savedTask = taskRepository.save(task);
 
         String dynamicGroupName = "Task-" + savedTask.getId() + "-Group";
 
@@ -86,7 +88,7 @@ public class JPAService extends WebService implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public TaskResponse getTaskById(String id) {
-        TaskEntity task = dataAccessFilter.findByIdOrThrow(TaskEntity.class, UUID.fromString(id));
+        TaskCassandra task = dataAccessFilter.findByIdOrThrow(TaskCassandra.class, UUID.fromString(id));
         return modelMapper.map(task, TaskResponse.class);
     }
 
@@ -104,7 +106,7 @@ public class JPAService extends WebService implements TaskService {
         // filters.put("search", search);
         // }
         return dataAccessFilter
-                .findAll(TaskEntity.class, filters,
+                .findAll(TaskCassandra.class, filters,
                         AccessCriteria.builder().skipDynamicGroupCheck(true).allowedRoles(Set.of("Basic Access"))
                                 .build())
                 .stream()
@@ -127,14 +129,14 @@ public class JPAService extends WebService implements TaskService {
         // filters.put("search", search);
         // }
         return dataAccessFilter
-                .findAll(TaskEntity.class, filters, AccessCriteria.accountOnly(), pageable)
+                .findAll(TaskCassandra.class, filters, AccessCriteria.accountOnly(), pageable)
                 .map(task -> modelMapper.map(task, TaskResponse.class));
     }
 
     @Override
     @Transactional
     public TaskResponse updateTask(String id, TaskRequest request) {
-        TaskEntity existingTask = taskRepository.findById(UUID.fromString(id))
+        TaskCassandra existingTask = taskRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
 
         // Update fields
@@ -148,7 +150,7 @@ public class JPAService extends WebService implements TaskService {
             existingTask.setPriority(request.getPriority());
         }
 
-        TaskEntity updatedTask = taskRepository.save(existingTask);
+        TaskCassandra updatedTask = taskRepository.save(existingTask);
         return modelMapper.map(updatedTask, TaskResponse.class);
     }
 

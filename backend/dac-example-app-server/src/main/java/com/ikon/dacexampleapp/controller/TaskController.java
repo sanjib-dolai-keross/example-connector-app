@@ -8,8 +8,6 @@ import com.ikon.dacexampleapp.enums.TaskPriority;
 import com.ikon.dacexampleapp.enums.TaskStatus;
 import com.ikon.dacexampleapp.service.TaskService;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,17 +16,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.UUID;
 
 @RestController
-@RequiredArgsConstructor
 public class TaskController implements TaskApi {
 
-    @Qualifier("mongoService")
     private final TaskService taskService;
 
+    public TaskController(@Qualifier("mongoService") TaskService taskService) {
+        this.taskService = taskService;
+    }
+
     @Override
-    @RequireRole("Basic Access")
     public ResponseEntity<TaskResponse> createTask(String accessToken, TaskRequest request) {
         TaskResponse response = taskService.createTask(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
