@@ -5,7 +5,6 @@ import com.ikon.dacexampleapp.dto.request.TaskRequest;
 import com.ikon.dacexampleapp.dto.response.TaskResponse;
 import com.ikon.dacexampleapp.enums.TaskPriority;
 import com.ikon.dacexampleapp.enums.TaskStatus;
-import com.ikon.dacexampleapp.service.ElasticsearchService;
 import com.ikon.dacexampleapp.service.TaskService;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,9 +19,9 @@ import java.util.List;
 @RestController
 public class TaskController implements TaskApi {
 
-    private final ElasticsearchService taskService;
+    private final TaskService taskService;
 
-    public TaskController(ElasticsearchService taskService) {
+    public TaskController(@Qualifier("jpaService") TaskService taskService) {
         this.taskService = taskService;
     }
 

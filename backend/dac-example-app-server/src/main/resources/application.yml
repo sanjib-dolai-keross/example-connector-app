@@ -46,15 +46,6 @@ spring:
       repositories:
         enabled: true
 
-mongodb:
-  client:
-    settings:
-      connection-pool:
-        max-size: 500
-        min-size: 10
-        max-connection-idle-time: 10s
-        max-wait-time: 5s
-
   cassandra:
     contact-points: localhost
     port: 9043
@@ -65,6 +56,15 @@ mongodb:
     local-datacenter: datacenter1
     pool:
       init-query-timeout: 30s
+
+mongodb:
+  client:
+    settings:
+      connection-pool:
+        max-size: 500
+        min-size: 10
+        max-connection-idle-time: 10s
+        max-wait-time: 5s
 
   elasticsearch:
     uris: http://localhost:9200
