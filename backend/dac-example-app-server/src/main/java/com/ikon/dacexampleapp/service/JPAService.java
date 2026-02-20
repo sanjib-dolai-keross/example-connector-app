@@ -104,8 +104,8 @@ public class JPAService extends WebService implements TaskService {
         }
         return dataAccessFilter
                 .findAll(TaskEntity.class, filters, search,
-                        Sort.by(Sort.Direction.DESC, "createdAt"),
                         AccessCriteria.builder().allowedRoles(Set.of("Basic Access"))
+                                .allowedGroups(Set.of("Basic Access Group"))
                                 .build())
                 .stream()
                 .map(task -> modelMapper.map(task, TaskResponse.class))
