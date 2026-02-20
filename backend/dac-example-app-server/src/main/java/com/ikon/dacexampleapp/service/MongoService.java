@@ -28,20 +28,19 @@ import com.ikon.dacexampleapp.enums.TaskStatus;
 import com.ikon.dacexampleapp.repository.TaskMongoRepository;
 import com.ikon.webservice.WebService;
 
-
 @Service("mongoService")
 public class MongoService extends WebService implements TaskService {
 
-    private final TaskMongoRepository taskMongoRepository;
+    private final TaskMongoRepository taskRepository;
     private final ModelMapper modelMapper;
     private final DataAccessFilter dataAccessFilter;
     private final IkonGroupService ikonGroupService;
     private final IkonApplicationProperties applicationProperties;
 
     public MongoService(TaskMongoRepository taskMongoRepository, ModelMapper modelMapper,
-             @Qualifier("mongoAccessFilter") DataAccessFilter dataAccessFilter,
+            @Qualifier("mongoAccessFilter") DataAccessFilter dataAccessFilter,
             IkonGroupService ikonGroupService, IkonApplicationProperties applicationProperties) {
-        this.taskMongoRepository = taskMongoRepository;
+        this.taskRepository = taskMongoRepository;
         this.modelMapper = modelMapper;
         this.dataAccessFilter = dataAccessFilter;
         this.ikonGroupService = ikonGroupService;
@@ -62,12 +61,12 @@ public class MongoService extends WebService implements TaskService {
         }
         task.setAccountId(getActiveAccountId());
 
-        TaskDocument savedTask = taskMongoRepository.save(task);
+        TaskDocument savedTask = taskRepository.save(task);
 
         String dynamicGroupName = "Task-" + savedTask.getId() + "-Group";
 
         savedTask.setDynamicGroups(new HashSet<>(Set.of(dynamicGroupName)));
-        taskMongoRepository.save(savedTask);
+        taskRepository.save(savedTask);
 
         IkonGroup group = IkonGroup.builder()
                 .groupName(dynamicGroupName)
@@ -103,7 +102,8 @@ public class MongoService extends WebService implements TaskService {
         }
 
         return dataAccessFilter
-                .findAll(TaskDocument.class, filters,AccessCriteria.builder().skipDynamicGroupCheck(true).build())
+                .findAll(TaskDocument.class, filters,
+                        AccessCriteria.builder().allowedRoles(Set.of("Basic Access")).build())
                 .stream()
                 .map(task -> modelMapper.map(task, TaskResponse.class))
                 .toList();
@@ -131,7 +131,7 @@ public class MongoService extends WebService implements TaskService {
     @Override
     @Transactional
     public TaskResponse updateTask(String id, TaskRequest request) {
-        TaskDocument existingTask = taskMongoRepository.findById(new ObjectId(id))
+        TaskDocument existingTask = taskRepository.findById(new ObjectId(id))
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
 
         // Update fields
@@ -145,7 +145,7 @@ public class MongoService extends WebService implements TaskService {
             existingTask.setPriority(request.getPriority());
         }
 
-        TaskDocument updatedTask = taskMongoRepository.save(existingTask);
+        TaskDocument updatedTask = taskRepository.save(existingTask);
         return modelMapper.map(updatedTask, TaskResponse.class);
     }
 
@@ -153,10 +153,10 @@ public class MongoService extends WebService implements TaskService {
     @Transactional
     public void deleteTask(String id) {
         ObjectId objectId = new ObjectId(id);
-        if (!taskMongoRepository.existsById(objectId)) {
+        if (!taskRepository.existsById(objectId)) {
             throw new RuntimeException("Task not found with id: " + id);
         }
-        taskMongoRepository.deleteById(objectId);
+        taskRepository.deleteById(objectId);
     }
 
 }

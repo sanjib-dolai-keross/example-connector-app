@@ -18,6 +18,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -60,6 +61,7 @@ public class JPAService extends WebService implements TaskService {
             task.setPriority(TaskPriority.MEDIUM);
         }
         task.setAccountId(getActiveAccountId());
+        task.setCreatedBy(getCurrentUserId());
 
         TaskEntity savedTask = taskRepository.save(task);
 
@@ -100,12 +102,10 @@ public class JPAService extends WebService implements TaskService {
         if (priority != null) {
             filters.put("priority", priority);
         }
-        // if (search != null && !search.trim().isEmpty()) {
-        // filters.put("search", search);
-        // }
         return dataAccessFilter
-                .findAll(TaskEntity.class, filters,
-                        AccessCriteria.builder().skipDynamicGroupCheck(true).allowedRoles(Set.of("Basic Access"))
+                .findAll(TaskEntity.class, filters, search,
+                        Sort.by(Sort.Direction.DESC, "createdAt"),
+                        AccessCriteria.builder().allowedRoles(Set.of("Basic Access"))
                                 .build())
                 .stream()
                 .map(task -> modelMapper.map(task, TaskResponse.class))
@@ -123,19 +123,17 @@ public class JPAService extends WebService implements TaskService {
         if (priority != null) {
             filters.put("priority", priority);
         }
-        // if (search != null && !search.trim().isEmpty()) {
-        // filters.put("search", search);
-        // }
         return dataAccessFilter
-                .findAll(TaskEntity.class, filters, AccessCriteria.accountOnly(), pageable)
+                .findAll(TaskEntity.class, filters, search, AccessCriteria.accountOnly(), pageable)
                 .map(task -> modelMapper.map(task, TaskResponse.class));
     }
 
     @Override
     @Transactional
     public TaskResponse updateTask(String id, TaskRequest request) {
-        TaskEntity existingTask = taskRepository.findById(UUID.fromString(id))
-                .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
+        TaskEntity existingTask = dataAccessFilter.findByIdOrThrow(TaskEntity.class, UUID.fromString(id),
+                AccessCriteria.builder().ownerField("createdBy").skipDynamicGroupCheck(true)
+                        .allowedRoles(Set.of("Task Admin")).build());
 
         // Update fields
         existingTask.setTitle(request.getTitle());
@@ -156,8 +154,10 @@ public class JPAService extends WebService implements TaskService {
     @Transactional
     public void deleteTask(String id) {
         UUID uuid = UUID.fromString(id);
-        if (!taskRepository.existsById(uuid)) {
-            throw new RuntimeException("Task not found with id: " + id);
+        if (!dataAccessFilter.isAccessible(TaskEntity.class, uuid,
+                AccessCriteria.builder().ownerField("createdBy").skipDynamicGroupCheck(true)
+                        .allowedRoles(Set.of("Task Admin")).build())) {
+            throw new RuntimeException("Access Denied");
         }
         taskRepository.deleteById(uuid);
     }

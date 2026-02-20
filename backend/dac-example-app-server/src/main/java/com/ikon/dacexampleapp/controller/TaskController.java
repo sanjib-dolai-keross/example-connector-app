@@ -1,11 +1,11 @@
 package com.ikon.dacexampleapp.controller;
 
-import com.ikon.dac.annotation.RequireRole;
 import com.ikon.dacexampleapp.api.TaskApi;
 import com.ikon.dacexampleapp.dto.request.TaskRequest;
 import com.ikon.dacexampleapp.dto.response.TaskResponse;
 import com.ikon.dacexampleapp.enums.TaskPriority;
 import com.ikon.dacexampleapp.enums.TaskStatus;
+import com.ikon.dacexampleapp.service.ElasticsearchService;
 import com.ikon.dacexampleapp.service.TaskService;
 
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,9 +20,9 @@ import java.util.List;
 @RestController
 public class TaskController implements TaskApi {
 
-    private final TaskService taskService;
+    private final ElasticsearchService taskService;
 
-    public TaskController(@Qualifier("mongoService") TaskService taskService) {
+    public TaskController(ElasticsearchService taskService) {
         this.taskService = taskService;
     }
 

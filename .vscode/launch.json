@@ -2,11 +2,11 @@
     "configurations": [
         {
             "type": "java",
-            "name": "Spring Boot-DacExampleAppApplication<dac-example-app-server>",
+            "name": "Spring Boot-DacExampleAppApplication<{{repo_name}}-server>",
             "request": "launch",
             "cwd": "${workspaceFolder}",
             "mainClass": "com.ikon.dacexampleapp.DacExampleAppApplication",
-            "projectName": "dac-example-app-server",
+            "projectName": "{{repo_name}}-server",
             "args": "",
             "envFile": "${workspaceFolder}/.env"
         }

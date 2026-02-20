@@ -1,28 +1,5 @@
 package com.ikon.dacexampleapp.service;
 
-import com.ikon.app.core.properties.IkonApplicationProperties;
-import com.ikon.appaccessmanagement.entity.group.IkonGroup;
-import com.ikon.appaccessmanagement.enums.GroupType;
-import com.ikon.appaccessmanagement.service.IkonGroupService;
-import com.ikon.dac.core.AccessCriteria;
-import com.ikon.dac.core.DataAccessFilter;
-import com.ikon.dacexampleapp.dto.request.TaskRequest;
-import com.ikon.dacexampleapp.dto.response.TaskResponse;
-import com.ikon.dacexampleapp.entity.TaskCassandra;
-import com.ikon.dacexampleapp.entity.TaskEntity;
-import com.ikon.dacexampleapp.enums.TaskPriority;
-import com.ikon.dacexampleapp.enums.TaskStatus;
-import com.ikon.dacexampleapp.repository.TaskCassandraRepository;
-import com.ikon.dacexampleapp.repository.TaskRepository;
-import com.ikon.webservice.WebService;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -30,19 +7,43 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-@Service("cassandraService")
-public class CassandraService extends WebService implements TaskService {
+import org.bson.types.ObjectId;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-    private final TaskCassandraRepository taskRepository;
+import com.ikon.app.core.properties.IkonApplicationProperties;
+import com.ikon.appaccessmanagement.entity.group.IkonGroup;
+import com.ikon.appaccessmanagement.enums.GroupType;
+import com.ikon.appaccessmanagement.service.IkonGroupService;
+import com.ikon.dac.core.AccessCriteria;
+import com.ikon.dac.core.DataAccessFilter;
+import com.ikon.dac.filter.elasticsearch.ElasticAccessFilter;
+import com.ikon.dacexampleapp.dto.request.TaskRequest;
+import com.ikon.dacexampleapp.dto.response.TaskResponse;
+import com.ikon.dacexampleapp.entity.TaskElasticsearch;
+import com.ikon.dacexampleapp.enums.TaskPriority;
+import com.ikon.dacexampleapp.enums.TaskStatus;
+import com.ikon.dacexampleapp.repository.TaskElasticsearchRepository;
+import com.ikon.webservice.WebService;
+
+@Service("elasticsearchService")
+public class ElasticsearchService extends WebService implements TaskService {
+
+    private final TaskElasticsearchRepository taskRepository;
     private final ModelMapper modelMapper;
     private final DataAccessFilter dataAccessFilter;
     private final IkonGroupService ikonGroupService;
     private final IkonApplicationProperties applicationProperties;
 
-    public CassandraService(TaskCassandraRepository taskRepository, ModelMapper modelMapper,
-            @Qualifier("cassandraAccessFilter") DataAccessFilter dataAccessFilter,
+    public ElasticsearchService(TaskElasticsearchRepository taskMongoRepository, ModelMapper modelMapper,
+            @Qualifier("elasticAccessFilter") DataAccessFilter dataAccessFilter,
             IkonGroupService ikonGroupService, IkonApplicationProperties applicationProperties) {
-        this.taskRepository = taskRepository;
+        this.taskRepository = taskMongoRepository;
         this.modelMapper = modelMapper;
         this.dataAccessFilter = dataAccessFilter;
         this.ikonGroupService = ikonGroupService;
@@ -52,7 +53,7 @@ public class CassandraService extends WebService implements TaskService {
     @Override
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
-        TaskCassandra task = modelMapper.map(request, TaskCassandra.class);
+        TaskElasticsearch task = modelMapper.map(request, TaskElasticsearch.class);
 
         // Set default values if not provided
         if (task.getStatus() == null) {
@@ -61,9 +62,11 @@ public class CassandraService extends WebService implements TaskService {
         if (task.getPriority() == null) {
             task.setPriority(TaskPriority.MEDIUM);
         }
+        task.setId(UUID.randomUUID());
+
         task.setAccountId(getActiveAccountId());
 
-        TaskCassandra savedTask = taskRepository.save(task);
+        TaskElasticsearch savedTask = taskRepository.save(task);
 
         String dynamicGroupName = "Task-" + savedTask.getId() + "-Group";
 
@@ -88,7 +91,7 @@ public class CassandraService extends WebService implements TaskService {
     @Override
     @Transactional(readOnly = true)
     public TaskResponse getTaskById(String id) {
-        TaskCassandra task = dataAccessFilter.findByIdOrThrow(TaskCassandra.class, UUID.fromString(id));
+        TaskElasticsearch task = dataAccessFilter.findByIdOrThrow(TaskElasticsearch.class, new ObjectId(id));
         return modelMapper.map(task, TaskResponse.class);
     }
 
@@ -102,10 +105,9 @@ public class CassandraService extends WebService implements TaskService {
         if (priority != null) {
             filters.put("priority", priority);
         }
+
         return dataAccessFilter
-                .findAll(TaskCassandra.class, filters,
-                        AccessCriteria.builder().skipDynamicGroupCheck(true).allowedRoles(Set.of("Basic Access"))
-                                .build())
+                .findAll(TaskElasticsearch.class, filters,AccessCriteria.builder().build())
                 .stream()
                 .map(task -> modelMapper.map(task, TaskResponse.class))
                 .toList();
@@ -113,8 +115,8 @@ public class CassandraService extends WebService implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<TaskResponse> getTasksPaginated(Pageable pageable, TaskStatus status,
-            TaskPriority priority, String search) {
+    public Page<TaskResponse> getTasksPaginated(Pageable pageable, TaskStatus status, TaskPriority priority,
+            String search) {
         Map<String, Object> filters = new HashMap<>();
         if (status != null) {
             filters.put("status", status);
@@ -122,16 +124,18 @@ public class CassandraService extends WebService implements TaskService {
         if (priority != null) {
             filters.put("priority", priority);
         }
-    
+
         return dataAccessFilter
-                .findAll(TaskCassandra.class, filters, AccessCriteria.accountOnly(), pageable)
+                .findAll(TaskElasticsearch.class, filters,
+                        AccessCriteria.defaults(),
+                        pageable)
                 .map(task -> modelMapper.map(task, TaskResponse.class));
     }
 
     @Override
     @Transactional
     public TaskResponse updateTask(String id, TaskRequest request) {
-        TaskCassandra existingTask = taskRepository.findById(UUID.fromString(id))
+        TaskElasticsearch existingTask = taskRepository.findById(UUID.fromString(id))
                 .orElseThrow(() -> new RuntimeException("Task not found with id: " + id));
 
         // Update fields
@@ -145,17 +149,18 @@ public class CassandraService extends WebService implements TaskService {
             existingTask.setPriority(request.getPriority());
         }
 
-        TaskCassandra updatedTask = taskRepository.save(existingTask);
+        TaskElasticsearch updatedTask = taskRepository.save(existingTask);
         return modelMapper.map(updatedTask, TaskResponse.class);
     }
 
     @Override
     @Transactional
     public void deleteTask(String id) {
-        UUID uuid = UUID.fromString(id);
-        if (!taskRepository.existsById(uuid)) {
+        UUID objectId = UUID.fromString(id);
+        if (!taskRepository.existsById(objectId)) {
             throw new RuntimeException("Task not found with id: " + id);
         }
-        taskRepository.deleteById(uuid);
+        taskRepository.deleteById(objectId);
     }
+
 }

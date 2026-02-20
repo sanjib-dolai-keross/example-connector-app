@@ -41,6 +41,11 @@ spring:
       username: root
       password: mongopassword123
       authentication-database: admin
+
+    elasticsearch:
+      repositories:
+        enabled: true
+
 mongodb:
   client:
     settings:
@@ -51,18 +56,18 @@ mongodb:
         max-wait-time: 5s
 
   cassandra:
-    keyspace-name: my_keyspace
     contact-points: localhost
-    port: 9042
+    port: 9043
+    username: cassandra_user
+    password: securepassword123
+    keyspace-name: dac_example_app
+    schema-action: create-if-not-exists
     local-datacenter: datacenter1
-    schema-action: CREATE_IF_NOT_EXISTS
-    
-    # Driver level timeouts (often needed to avoid "DriverTimeoutException")
-    request:
-      timeout: 10s
-    connection:
-      connect-timeout: 10s
-      init-query-timeout: 10s
+    pool:
+      init-query-timeout: 30s
+
+  elasticsearch:
+    uris: http://localhost:9200
 
 ikon:
   user:

@@ -67,4 +67,6 @@ public class TaskEntity {
     @UpdateTimestamp
     @Column(nullable = false)
     private LocalDateTime updatedAt;
+
+    private UUID createdBy;
 }
