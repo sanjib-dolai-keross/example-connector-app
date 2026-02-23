@@ -21,7 +21,7 @@ public class TaskController implements TaskApi {
 
     private final TaskService taskService;
 
-    public TaskController(@Qualifier("jpaService") TaskService taskService) {
+    public TaskController(@Qualifier("cassandraService") TaskService taskService) {
         this.taskService = taskService;
     }
 

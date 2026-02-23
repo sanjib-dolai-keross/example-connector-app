@@ -6,13 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.cassandra.core.mapping.PrimaryKey;
+import org.springframework.data.cassandra.core.cql.PrimaryKeyType;
+import org.springframework.data.cassandra.core.mapping.PrimaryKeyColumn;
 import org.springframework.data.cassandra.core.mapping.Table;
 
 import com.ikon.dacexampleapp.enums.TaskPriority;
 import com.ikon.dacexampleapp.enums.TaskStatus;
 
-import java.time.LocalDateTime; // Or use Instant for better UTC handling
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -24,22 +25,20 @@ import java.util.UUID;
 @AllArgsConstructor
 public class TaskCassandra {
 
-    @PrimaryKey
-    private UUID id;
-
-    // Standard column (Note: Querying by this will be slow without an index)
+    @PrimaryKeyColumn(name = "accountid", ordinal = 0, type = PrimaryKeyType.PARTITIONED)
     private UUID accountId;
+
+    @PrimaryKeyColumn(name = "id", ordinal = 1, type = PrimaryKeyType.CLUSTERED)
+    private UUID id;
 
     private String title;
 
     private String description;
 
-    // Enums are stored as Strings by default in Spring Data Cassandra
     private TaskStatus status = TaskStatus.PENDING;
 
     private TaskPriority priority = TaskPriority.MEDIUM;
 
-    // Cassandra stores sets natively. No @ElementCollection needed.
     private Set<String> dynamicGroups = new HashSet<>();
 
     @CreatedDate

@@ -94,15 +94,6 @@ ikon:
     # Default batch size for IN clause operations (default: 500)
     default-batch-size: 500
 
-# If you are using process, uncomment below
-# processengine:
-#   databaseSchemaUpdate: false # possible values: "true", "false", "create-drop"
-#   bpmn:
-#     enabled: true
-#     path: "../../bpmn"
-# job:
-#   max-pool-size: 100
-
 logging:
   level:
     com.ikon: DEBUG

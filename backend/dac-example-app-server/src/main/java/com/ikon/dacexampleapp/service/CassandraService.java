@@ -62,6 +62,7 @@ public class CassandraService extends WebService implements TaskService {
             task.setPriority(TaskPriority.MEDIUM);
         }
         task.setAccountId(getActiveAccountId());
+        task.setId(UUID.randomUUID());
 
         TaskCassandra savedTask = taskRepository.save(task);
 

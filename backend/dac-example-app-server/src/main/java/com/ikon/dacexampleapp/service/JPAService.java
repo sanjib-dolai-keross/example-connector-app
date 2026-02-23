@@ -18,7 +18,6 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -103,7 +102,7 @@ public class JPAService extends WebService implements TaskService {
             filters.put("priority", priority);
         }
         return dataAccessFilter
-                .findAll(TaskEntity.class, filters, search,
+                .findAll(TaskEntity.class,
                         AccessCriteria.builder().allowedRoles(Set.of("Basic Access"))
                                 .allowedGroups(Set.of("Basic Access Group"))
                                 .build())
