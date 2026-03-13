@@ -10,10 +10,10 @@
         <relativePath />
     </parent>
     <groupId>com.ikon</groupId> <!-- lookup parent from repository -->
-    <artifactId>dac-example-app</artifactId><!-- lookup parent from repository -->
+    <artifactId>connector-example-app</artifactId><!-- lookup parent from repository -->
     <version>1.0.0</version>
     <packaging>pom</packaging>
-    <name>dac-example-app</name><!-- lookup parent from repository -->
+    <name>connector-example-app</name><!-- lookup parent from repository -->
     <url />
 
     <properties>
@@ -23,7 +23,7 @@
         <avro.version>1.12.0</avro.version>
         <avro-serializer.version>7.8.0</avro-serializer.version>
         <ikon.sdk.version>1.0.0</ikon.sdk.version>
-        <dac-example-app.version>1.0.0</dac-example-app.version>
+        <connector-example-app.version>1.0.0</connector-example-app.version>
     </properties>
 
     <repositories>
@@ -71,7 +71,7 @@
         </dependencies>
     </dependencyManagement>
     <modules>
-        <module>dac-example-app-client</module>
-        <module>dac-example-app-server</module>
+        <module>connector-example-app-client</module>
+        <module>connector-example-app-server</module>
     </modules>
 </project>
