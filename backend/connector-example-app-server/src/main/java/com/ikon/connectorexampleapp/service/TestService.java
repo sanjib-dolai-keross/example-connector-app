@@ -20,8 +20,23 @@ public class TestService implements ConnectorDataSync {
         List<FieldsConfigDto> fieldsConfig = new ArrayList<>();
 
         fieldsConfig.add(FieldsConfigDto.builder()
-                .key("field1")
-                .label("Field 1")
+                .key("name")
+                .label("File Name")
+                .type("string")
+                .build());
+        fieldsConfig.add(FieldsConfigDto.builder()
+                .key("size")
+                .label("File Size")
+                .type("number")
+                .build());
+        fieldsConfig.add(FieldsConfigDto.builder()
+                .key("accountId")
+                .label("Account Id")
+                .type("string")
+                .build());
+        fieldsConfig.add(FieldsConfigDto.builder()
+                .key("ownerType")
+                .label("Owner Type")
                 .type("string")
                 .build());
         return fieldsConfig;
@@ -29,7 +44,7 @@ public class TestService implements ConnectorDataSync {
 
     @Override
     public String getModule() {
-        return "Lead";
+        return "My Drive";
     }
 
     @Override

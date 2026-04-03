@@ -24,7 +24,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: https://ikoncloud-dev.keross.com/ikon-api/platform
+          issuer-uri: https://holocron.keross.com/api/platform
 
 
 
@@ -33,8 +33,7 @@ ikon:
     agent: "IKON App Server"
   time-zone: "Asia/Kolkata"
   platform:
-    rest:
-      url: https://ikoncloud-dev.keross.com/ikon-api/platform
+    rest: https://holocron.keross.com/api
   logger:
     enabled: false # set true when deployed in dev/uat/prod otherwise set to false if running in local/devtools environment.
   app:
@@ -47,6 +46,11 @@ ikon:
       file: ../../bpmn/project.json
 
   connector:
+    internal-auth:
+      tokenUri: https://holocron.keross.com/api/platform/oauth2/token
+      clientId: ikon-client-management
+      clientSecret: F38Ysb4VEOSXUeISKcMyvpKqxtrIL8nf
+      scopes: "internal"
     crypto:
       secretKey: MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=
 
